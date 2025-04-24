@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AstridEco ♻️ Global Waste Sorting Assistant</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #00C853;
+      --primary-light: #5EFC82;
+      --primary-dark: #009624;
+      --secondary: #FF6D00;
+      --background: #F5FFF7;
+      --card-bg: #FFFFFF;
+      --text: #2E3D35;
+      --text-light: #6B7A72;
+      --error: #D32F2F;
+      --warning: #FFA000;
+      --fade: 0.3s ease;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.2);
+      --radius-sm: 0.5rem;
+      --radius-md: 1rem;
+      --radius-lg: 1.5rem;
+    }
+    * { 
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      margin: 0; 
+      padding: 1rem;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--background);
+      color: var(--text);
+      display: flex; 
+      justify-content: center;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    .container {
+      width: 100%; 
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .header {
+      text-align: center;
+      padding: 2rem; 
+      margin-bottom: 2rem;
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+    .header h1 {
+      margin: .5rem 0;
+      color: var(--primary-dark);
+      font-size: 2.2rem;
+      font-weight: 700;
+    }
+    .header p { 
+      margin: .5rem 0; 
+      color: var(--text-light);
+      font-size: 1.1rem;
+    }
+    .controls {
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 1rem; 
+      margin-bottom: 1.5rem;
+    }
+    .controls > * {
+      flex: 1 1 200px;
+    }
+    label { 
+      display: block; 
+      margin-bottom: .5rem; 
+      font-weight: 600;
+      color: var(--primary-dark);
+    }
+    select, textarea {
+      width: 100%; 
+      padding: .75rem 1rem;
+      border: 2px solid #E0E0E0; 
+      border-radius: var(--radius-sm);
+      font-size: 1rem; 
+      transition: all var(--fade);
+      background-color: white;
+    }
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right .75rem center;
+      background-size: 1rem;
+    }
+    select:focus, textarea:focus { 
+      outline: none; 
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 200, 83, 0.2);
+    }
+    textarea { 
+      resize: vertical; 
+      min-height: 120px;
+      line-height: 1.5;
+    }
+    button {
+      width: 100%; 
+      padding: 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 1rem; 
+      font-weight: 600;
+      transition: all var(--fade);
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: .5rem;
+      cursor: pointer;
+      border: none;
+      background: var(--primary);
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+    button:hover { 
+      background: var(--primary-dark); 
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    button:active {
+      transform: translateY(0);
+    }
+    button:disabled {
+      background: #BDBDBD;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    .loader {
+      display: none; 
+      text-align: center; 
+      margin: 1.5rem 0;
+      color: var(--primary);
+      font-weight: 500;
+    }
+    #response {
+      background: var(--card-bg); 
+      padding: 1.5rem;
+      border-radius: var(--radius-md); 
+      box-shadow: var(--shadow-sm);
+      min-height: 8rem; 
+      position: relative;
+      opacity: 0; 
+      height: 0;
+      overflow: hidden;
+      transition: all var(--fade);
+      margin-top: 1rem;
+    }
+    #response.visible { 
+      opacity: 1; 
+      height: auto;
+      min-height: 8rem;
+    }
+    #response .response-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #E0E0E0;
+    }
+    #response .response-icon {
+      font-size: 1.75rem;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    #response .response-title {
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin: 0;
+    }
+    #response .response-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    #response .waste-type {
+      background: rgba(0, 200, 83, 0.1);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      border-left: 4px solid var(--primary);
+    }
+    #response .waste-type-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    #response ul {
+      margin: 0.5rem 0 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    #response ul li {
+      position: relative;
+      padding-left: 1.5rem;
+    }
+    #response ul li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--primary);
+      font-weight: bold;
+    }
+    #response .disposal-steps {
+      background: rgba(255, 109, 0, 0.1);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      border-left: 4px solid var(--secondary);
+    }
+    #response .disposal-steps-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    #response .additional-info {
+      background: rgba(107, 122, 114, 0.1);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      border-left: 4px solid var(--text-light);
+    }
+    #response .additional-info-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    #response .collection-points {
+      background: rgba(0, 150, 36, 0.1);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      border-left: 4px solid var(--primary-dark);
+    }
+    #response .collection-points-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    #response .error-message {
+      color: var(--error);
+      background: rgba(211, 47, 47, 0.1);
+      padding: 1rem;
+      border-radius: var(--radius-sm);
+      border-left: 4px solid var(--error);
+    }
+    .earth-icon {
+      font-size: 3rem; 
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      position: relative;
+      display: inline-block;
+    }
+    .earth-icon::after {
+      content: '';
+      position: absolute;
+      top: -5px;
+      left: -5px;
+      right: -5px;
+      bottom: -5px;
+      border: 2px solid var(--primary-light);
+      border-radius: 50%;
+      animation: pulse 3s infinite;
+      opacity: 0.5;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.5; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+      100% { transform: scale(0.95); opacity: 0.5; }
+    }
+    .country-flag {
+      margin-right: 0.5rem;
+      border-radius: 2px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 2rem;
+      padding: 1rem;
+      color: var(--text-light);
+      font-size: 0.9rem;
+    }
+    .waste-examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .waste-example {
+      background: rgba(0, 200, 83, 0.1);
+      color: var(--primary-dark);
+      padding: 0.25rem 0.5rem;
+      border-radius: 1rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all var(--fade);
+    }
+    .waste-example:hover {
+      background: rgba(0, 200, 83, 0.2);
+    }
+    @media (max-width: 600px) {
+      .header h1 {
+        font-size: 1.8rem;
+      }
+      .header p {
+        font-size: 1rem;
+      }
+      #response {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <i class="fas fa-earth-americas earth-icon"></i>
+      <h1 id="ui-title">AstridEco ♻️ 
+	  
+	  Global Waste Sorting Assistant</h1>
+      <p id="ui-subtitle">Smart waste sorting assistant in 25 countries</p>
+    </div>
+
+    <div class="controls">
+      <div class="language-selector">
+        <label for="lang" id="ui-lang-label">UI Language:</label>
+        <select id="lang"></select>
+      </div>
+      <div class="country-selector">
+        <label for="country" id="ui-country-label">Select a country:</label>
+        <select id="country">
+          <option value="USA">🇺🇸 United States</option>
+          <option value="China">🇨🇳 China</option>
+          <option value="Japan">🇯🇵 Japan</option>
+          <option value="Germany">🇩🇪 Germany</option>
+          <option value="India">🇮🇳 India</option>
+          <option value="UK">🇬🇧 United Kingdom</option>
+          <option value="France">🇫🇷 France</option>
+          <option value="Brazil">🇧🇷 Brazil</option>
+          <option value="Italy">🇮🇹 Italy</option>
+          <option value="Canada">🇨🇦 Canada</option>
+          <option value="South Korea">🇰🇷 South Korea</option>
+          <option value="Russia">🇷🇺 Russia</option>
+          <option value="Australia">🇦🇺 Australia</option>
+          <option value="Spain">🇪🇸 Spain</option>
+          <option value="Mexico">🇲🇽 Mexico</option>
+          <option value="Indonesia">🇮🇩 Indonesia</option>
+          <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
+          <option value="Turkey">🇹🇷 Turkey</option>
+          <option value="Switzerland">🇨🇭 Switzerland</option>
+          <option value="Netherlands">🇳🇱 Netherlands</option>
+          <option value="Argentina">🇦🇷 Argentina</option>
+          <option value="Sweden">🇸🇪 Sweden</option>
+          <option value="Nigeria">🇳🇬 Nigeria</option>
+          <option value="South Africa">🇿🇦 South Africa</option>
+          <option value="Singapore">🇸🇬 Singapore</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div style="flex:1 1 100%;">
+        <label for="userInput" id="ui-input-label">What do you want to dispose of?</label>
+        <textarea id="userInput" placeholder="For example: yogurt plastic bottle with food residues..."></textarea>
+        <div class="waste-examples">
+          <div class="waste-example" onclick="document.getElementById('userInput').value = 'plastic food container with grease'">plastic food container</div>
+          <div class="waste-example" onclick="document.getElementById('userInput').value = 'broken glass bottle'">broken glass</div>
+          <div class="waste-example" onclick="document.getElementById('userInput').value = 'used batteries'">used batteries</div>
+          <div class="waste-example" onclick="document.getElementById('userInput').value = 'expired medicines'">expired medicines</div>
+        </div>
+      </div>
+    </div>
+
+    <button id="askBtn"><i class="fas fa-recycle"></i> <span id="ui-button">Analyze Waste</span></button>
+    <div class="loader" id="loader"><i class="fas fa-spinner fa-spin"></i> <span id="ui-loading">Analyzing waste...</span></div>
+
+    <div id="response">
+      <div class="response-header">
+        <i class="fas fa-leaf response-icon"></i>
+        <h3 class="response-title" id="response-title">Waste Disposal Guide</h3>
+      </div>
+      <div class="response-content" id="answer"></div>
+    </div>
+
+    <div class="footer" id="ui-footer">
+      ♻️ AstridEco helps you dispose waste responsibly worldwide
+    </div>
+  </div>
+
+  <script>
+    const apiToken = '73532256927db281cb8ba852d4a2f8fc73e95428f04b8118300c4adfa74d5dbb';
+    const apiUrl   = 'https://api.together.xyz/v1/chat/completions';
+    const model    = 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free';
+    const T = {
+      en: {
+        code: 'en', 
+        name: 'English',
+        title: 'AstridEco ♻️ Global Waste Sorting Assistant',
+        subtitle: 'Smart waste sorting assistant in 25 countries',
+        lang: 'UI Language:', 
+        country: 'Select a country:',
+        input: 'What do you want to dispose of?',
+        placeholder: 'For example: yogurt plastic bottle with food residues...',
+        button: 'Analyze Waste', 
+        loading: 'Analyzing waste...', 
+        error: '⚠️ Error. Please check your input and try again.',
+        responseTitle: 'Waste Disposal Guide',
+        footer: '♻️ AstridEco helps you dispose waste responsibly worldwide',
+        prompt: `You are AstridEco, a global waste sorting assistant. Provide detailed disposal instructions for the item in the specified country. 
+
+Country: {country}
+Item to dispose: {item}
+
+Your response MUST include these sections with icons and formatted as HTML divs with appropriate classes:
+
+
+<div class="waste-type">
+  <div class="waste-type-title"><i class="fas fa-trash-alt"></i> Waste Type</div>
+  <p>Identify the waste type (recyclable, organic, hazardous, etc.)</p>
+</div>
+
+
+<div class="disposal-steps">
+  <div class="disposal-steps-title"><i class="fas fa-list-ol"></i> Disposal Steps</div>
+  <ul>
+    <li>Step-by-step instructions for proper disposal</li>
+    <li>Include any preparation needed (cleaning, separating parts)</li>
+  </ul>
+</div>
+
+
+<div class="additional-info">
+  <div class="additional-info-title"><i class="fas fa-info-circle"></i> Additional Information</div>
+  <p>Special considerations, environmental impact, alternatives to disposal</p>
+</div>
+
+
+<div class="collection-points">
+  <div class="collection-points-title"><i class="fas fa-map-marker-alt"></i> Collection Points</div>
+  <p>Where to dispose of this item in {country}</p>
+</div>
+
+Use simple, clear language. Highlight important information. Include emojis where appropriate.`
+      },
+      es: {
+        code: 'es', 
+        name: 'Español',
+        title: 'AstridEco ♻️ Asistente Global de Clasificación de Residuos',
+        subtitle: 'Asistente inteligente en 25 países',
+        lang: 'Idioma de UI:', 
+        country: 'Selecciona un país:',
+        input: '¿Qué deseas desechar?',
+        placeholder: 'Por ejemplo: botella de yogur de plástico con restos de comida...',
+        button: 'Analizar Residuos', 
+        loading: 'Analizando residuos...', 
+        error: '⚠️ Error. Por favor verifica tu entrada e inténtalo de nuevo.',
+        responseTitle: 'Guía de Eliminación de Residuos',
+        footer: '♻️ AstridEco te ayuda a desechar residuos responsablemente en todo el mundo',
+        prompt: `Eres AstridEco, un asistente global de clasificación de residuos. Proporciona instrucciones detalladas para desechar el artículo en el país especificado.
+
+País: {country}
+Artículo a desechar: {item}
+
+Tu respuesta DEBE incluir estas secciones con iconos y formateadas como divs HTML con clases apropiadas:
+
+
+<div class="waste-type">
+  <div class="waste-type-title"><i class="fas fa-trash-alt"></i> Tipo de Residuo</div>
+  <p>Identifica el tipo de residuo (reciclable, orgánico, peligroso, etc.)</p>
+</div>
+
+
+<div class="disposal-steps">
+  <div class="disposal-steps-title"><i class="fas fa-list-ol"></i> Pasos de Eliminación</div>
+  <ul>
+    <li>Instrucciones paso a paso para desechar correctamente</li>
+    <li>Incluye cualquier preparación necesaria (limpieza, separación de partes)</li>
+  </ul>
+</div>
+
+
+<div class="additional-info">
+  <div class="additional-info-title"><i class="fas fa-info-circle"></i> Información Adicional</div>
+  <p>Consideraciones especiales, impacto ambiental, alternativas al desecho</p>
+</div>
+
+<div class="collection-points">
+  <div class="collection-points-title"><i class="fas fa-map-marker-alt"></i> Puntos de Recolección</div>
+  <p>Dónde desechar este artículo en {country}</p>
+</div>
+
+Usa lenguaje simple y claro. Destaca información importante. Incluye emojis donde sea apropiado.`
+      },
+      zh: {
+        code: 'zh', 
+        name: '中文',
+        title: 'AstridEco ♻️ 全球垃圾分类助手',
+        subtitle: '在25个国家的智能垃圾分类助手',
+        lang: '界面语言：', 
+        country: '选择国家：',
+        input: '您想处理什么？',
+        placeholder: '例如：带有食物残渣的酸奶塑料瓶…',
+        button: '分析垃圾', 
+        loading: '正在分析…', 
+        error: '⚠️ 错误，请检查输入后重试。',
+        responseTitle: '垃圾分类指南',
+        footer: '♻️ AstridEco帮助您在全球范围内负责任地处理垃圾',
+        prompt: `你是AstridEco，全球垃圾分类助手。请为指定国家的物品提供详细的处理指南。
+
+国家: {country}
+需要处理的物品: {item}
+
+你的回答必须包含以下部分，带有图标并格式化为带有适当类的HTML div:
+
+
+<div class="waste-type">
+  <div class="waste-type-title"><i class="fas fa-trash-alt"></i> 垃圾类型</div>
+  <p>确定垃圾类型(可回收、有机、有害等)</p>
+</div>
+
+
+<div class="disposal-steps">
+  <div class="disposal-steps-title"><i class="fas fa-list-ol"></i> 处理步骤</div>
+  <ul>
+    <li>正确处理的逐步说明</li>
+    <li>包括任何需要的准备(清洁、分离部件)</li>
+  </ul>
+</div>
+
+
+<div class="additional-info">
+  <div class="additional-info-title"><i class="fas fa-info-circle"></i> 附加信息</div>
+  <p>特殊注意事项、环境影响、处理替代方案</p>
+</div>
+
+
+<div class="collection-points">
+  <div class="collection-points-title"><i class="fas fa-map-marker-alt"></i> 收集点</div>
+  <p>在{country}处理此物品的地点</p>
+</div>
+
+使用简单清晰的语言。突出重要信息。在适当的地方使用表情符号。`
+      },
+      hi: {
+        code: 'hi', 
+        name: 'हिन्दी',
+        title: 'AstridEco ♻️ वैश्विक कचरा वर्गीकरण सहायक',
+        subtitle: '25 देशों में स्मार्ट सहायता',
+        lang: 'यूआई भाषा:', 
+        country: 'देश चुनें:',
+        input: 'आप क्या फेंकना चाहते हैं?',
+        placeholder: 'उदाहरण: दही की प्लास्टिक बोतल जिसमें भोजन अवशेष हों...',
+        button: 'कचरा विश्लेषण', 
+        loading: 'विश्लेषण कर रहा है...', 
+        error: '⚠️ त्रुटि। कृपया अपना इनपुट जांचें और पुनः प्रयास करें।',
+        responseTitle: 'कचरा निपटान मार्गदर्शिका',
+        footer: '♻️ AstridEco आपको विश्व स्तर पर जिम्मेदारी से कचरा निपटान में मदद करता है',
+        prompt: `आप AstridEco हैं, एक वैश्विक कचरा वर्गीकरण सहायक। निर्दिष्ट देश में आइटम के लिए विस्तृत निपटान निर्देश प्रदान करें।
+
+देश: {country}
+निपटान के लिए आइटम: {item}
+
+आपकी प्रतिक्रिया में आइकन के साथ ये अनुभाग शामिल होने चाहिए और उचित वर्गों के साथ HTML div के रूप में स्वरूपित होना चाहिए:
+
+
+<div class="waste-type">
+  <div class="waste-type-title"><i class="fas fa-trash-alt"></i> कचरे का प्रकार</div>
+  <p>कचरे के प्रकार की पहचान करें (पुनर्नवीनीकरण, जैविक, खतरनाक, आदि)</p>
+</div>
+
+
+<div class="disposal-steps">
+  <div class="disposal-steps-title"><i class="fas fa-list-ol"></i> निपटान चरण</div>
+  <ul>
+    <li>उचित निपटान के लिए चरण-दर-चरण निर्देश</li>
+    <li>किसी भी आवश्यक तैयारी को शामिल करें (सफाई, भागों को अलग करना)</li>
+  </ul>
+</div>
+
+
+<div class="additional-info">
+  <div class="additional-info-title"><i class="fas fa-info-circle"></i> अतिरिक्त जानकारी</div>
+  <p>विशेष विचार, पर्यावरणीय प्रभाव, निपटान के विकल्प</p>
+</div>
+
+
+<div class="collection-points">
+  <div class="collection-points-title"><i class="fas fa-map-marker-alt"></i> संग्रह बिंदु</div>
+  <p>{country} में इस आइटम को निपटाने के लिए स्थान</p>
+</div>
+
+सरल, स्पष्ट भाषा का प्रयोग करें। महत्वपूर्ण जानकारी को हाइलाइट करें। जहां उचित हो वहां इमोजी शामिल करें।`
+      },
+      ar: {
+        code: 'ar', 
+        name: 'العربية',
+        title: 'AstridEco ♻️ مساعد فرز النفايات العالمي',
+        subtitle: 'مساعد ذكي في 25 دولة',
+        lang: 'لغة الواجهة:', 
+        country: 'اختر الدولة:',
+        input: 'ما الذي تريد التخلص منه؟',
+        placeholder: 'على سبيل المثال: زجاجة زبادي بلاستيكية مع بقايا طعام...',
+        button: 'تحليل النفايات', 
+        loading: 'جارٍ التحليل...', 
+        error: '⚠️ خطأ. يرجى التحقق من المدخلات والمحاولة مرة أخرى.',
+        responseTitle: 'دليل التخلص من النفايات',
+        footer: '♻️ يساعدك AstridEcoفي التخلص من النفايات بمسؤولية في جميع أنحاء العالم',
+        prompt: `أنت AstridEco، مساعد عالمي لفرز النفايات. قدم تعليمات مفصلة للتخلص من العنصر في الدولة المحددة.
+
+الدولة: {country}
+العنصر المراد التخلص منه: {item}
+
+يجب أن تتضمن إجابتك هذه الأقسام مع الرموز وتنسيقها كـ divs HTML مع الفئات المناسبة:
+
+
+<div class="waste-type">
+  <div class="waste-type-title"><i class="fas fa-trash-alt"></i> نوع النفايات</div>
+  <p>تحديد نوع النفايات (قابلة لإعادة التدوير، عضوية، خطرة، إلخ)</p>
+</div>
+
+
+<div class="disposal-steps">
+  <div class="disposal-steps-title"><i class="fas fa-list-ol"></i> خطوات التخلص</div>
+  <ul>
+    <li>تعليمات خطوة بخطوة للتخلص السليم</li>
+    <li>تضمين أي تحضيرات مطلوبة (تنظيف، فصل الأجزاء)</li>
+  </ul>
+</div>
+
+
+<div class="additional-info">
+  <div class="additional-info-title"><i class="fas fa-info-circle"></i> معلومات إضافية</div>
+  <p>اعتبارات خاصة، التأثير البيئي، بدائل للتخلص</p>
+</div>
+
+
+<div class="collection-points">
+  <div class="collection-points-title"><i class="fas fa-map-marker-alt"></i> نقاط التجميع</div>
+  <p>أماكن التخلص من هذا العنصر في {country}</p>
+</div>
+
+استخدم لغة بسيطة وواضحة. سلط الضوء على المعلومات المهمة. أضف الرموز التعبيرية حيثما كان ذلك مناسبًا.`
+      },
+      ru: {
+        code: 'ru', 
+        name: 'Русский',
+        title: 'AstridEco ♻️ Глобальный помощник по сортировке отходов',
+        subtitle: 'Умный помощник в 25 странах',
+        lang: 'Язык интерфейса:', 
+        country: 'Выберите страну:',
+        input: 'Что вы хотите выбросить?',
+        placeholder: 'Например: пластиковая бутылка из-под йогурта с остатками еды...',
+        button: 'Анализировать отходы', 
+        loading: 'Анализируем отходы...', 
+        error: '⚠️ Ошибка. Пожалуйста, проверьте ввод и попробуйте снова.',
+        responseTitle: 'Руководство по утилизации отходов',
+        footer: '♻️ AstridEco помогает утилизировать отходы ответственно по всему миру',
+        prompt: `Вы - AstridEco, глобальный помощник по сортировке отходов. Предоставьте подробные инструкции по утилизации предмета в указанной стране.
+
+Страна: {country}
+Предмет для утилизации: {item}
+
+Ваш ответ ДОЛЖЕН включать эти разделы с иконками, отформатированные как HTML div с соответствующими классами:
+
+
+<div class="waste-type">
+  <div class="waste-type-title"><i class="fas fa-trash-alt"></i> Тип отходов</div>
+  <p>Определите тип отходов (перерабатываемые, органические, опасные и т.д.)</p>
+</div>
+
+
+<div class="disposal-steps">
+  <div class="disposal-steps-title"><i class="fas fa-list-ol"></i> Шаги утилизации</div>
+  <ul>
+    <li>Пошаговые инструкции для правильной утилизации</li>
+    <li>Включите необходимую подготовку (очистка, разделение частей)</li>
+  </ul>
+</div>
+
+
+<div class="additional-info">
+  <div class="additional-info-title"><i class="fas fa-info-circle"></i> Дополнительная информация</div>
+  <p>Особые соображения, воздействие на окружающую среду, альтернативы утилизации</p>
+</div>
+
+
+<div class="collection-points">
+  <div class="collection-points-title"><i class="fas fa-map-marker-alt"></i> Пункты сбора</div>
+  <p>Где утилизировать этот предмет в {country}</p>
+</div>
+
+Используйте простой, понятный язык. Выделяйте важную информацию. Добавляйте эмодзи, где это уместно.`
+      },
+      ja: {
+        code: 'ja', 
+        name: '日本語',
+        title: 'AstridEco ♻️ ゴミ分別グローバルアシスタント',
+        subtitle: '25ヶ国で使えるスマートなゴミ分別アシスタント',
+        lang: 'UI言語:', 
+        country: '国を選択:',
+        input: '何を処分しますか？',
+        placeholder: '例: 食べ残しのあるヨーグルトのプラスチック容器...',
+        button: 'ゴミを分析', 
+        loading: '分析中...', 
+        error: '⚠️ エラー。入力を確認して再度お試しください。',
+        responseTitle: 'ゴミ処分ガイド',
+        footer: '♻️ AstridEco は世界中で責任あるゴミ処分をお手伝いします',
+        prompt: `あなたは AstridEco 、ゴミ分別グローバルアシスタントです。指定された国のアイテムについて詳細な処分方法を提供してください。
+
+国: {country}
+処分するアイテム: {item}
+
+回答には以下のセクションを含め、アイコン付きで適切なクラスを持つHTML divとしてフォーマットしてください:
+
+
+<div class="waste-type">
+  <div class="waste-type-title"><i class="fas fa-trash-alt"></i> ゴミの種類</div>
+  <p>ゴミの種類を特定（リサイクル可能、生ごみ、有害ごみなど）</p>
+</div>
+
+
+<div class="disposal-steps">
+  <div class="disposal-steps-title"><i class="fas fa-list-ol"></i> 処分手順</div>
+  <ul>
+    <li>正しい処分のためのステップバイステップの手順</li>
+    <li>必要な準備（洗浄、部品の分離など）を含む</li>
+  </ul>
+</div>
+
+
+<div class="additional-info">
+  <div class="additional-info-title"><i class="fas fa-info-circle"></i> 追加情報</div>
+  <p>特別な考慮事項、環境への影響、処分の代替案</p>
+</div>
+
+
+<div class="collection-points">
+  <div class="collection-points-title"><i class="fas fa-map-marker-alt"></i> 回収場所</div>
+  <p>{country}でこのアイテムを処分できる場所</p>
+</div>
+
+簡単で明確な言語を使用してください。重要な情報を強調表示します。適切な場所に絵文字を含めてください。`
+      },
+      de: {
+        code: 'de', 
+        name: 'Deutsch',
+        title: 'AstridEco ♻️ Globaler Mülltrennungs-Assistent',
+        subtitle: 'Intelligenter Assistent in 25 Ländern',
+        lang: 'UI-Sprache:', 
+        country: 'Land auswählen:',
+        input: 'Was möchten Sie entsorgen?',
+        placeholder: 'Zum Beispiel: Joghurt-Plastikflasche mit Essensresten...',
+        button: 'Müll analysieren', 
+        loading: 'Analysiere Müll...', 
+        error: '⚠️ Fehler. Bitte überprüfen Sie Ihre Eingabe und versuchen Sie es erneut.',
+        responseTitle: 'Abfallentsorgungsleitfaden',
+        footer: '♻️ AstridEco hilft Ihnen weltweit verantwortungsvoll Abfall zu entsorgen',
+        prompt: `Sie sind AstridEco, ein globaler Mülltrennungs-Assistent. Geben Sie detaillierte Anweisungen zur Entsorgung des Artikels im angegebenen Land.
+
+Land: {country}
+Zu entsorgender Artikel: {item}
+
+Ihre Antwort MUSS diese Abschnitte mit Symbolen enthalten und als HTML-divs mit entsprechenden Klassen formatiert sein:
+
+
+<div class="waste-type">
+  <div class="waste-type-title"><i class="fas fa-trash-alt"></i> Abfallart</div>
+  <p>Geben Sie die Abfallart an (recycelbar, organisch, gefährlich etc.)</p>
+</div>
+
+
+<div class="disposal-steps">
+  <div class="disposal-steps-title"><i class="fas fa-list-ol"></i> Entsorgungsschritte</div>
+  <ul>
+    <li>Schritt-für-Schritt-Anleitung zur richtigen Entsorgung</li>
+    <li>Enthalten Sie alle notwendigen Vorbereitungen (Reinigung, Teile trennen)</li>
+  </ul>
+</div>
+
+<div class="additional-info">
+  <div class="additional-info-title"><i class="fas fa-info-circle"></i> Zusätzliche Informationen</div>
+  <p>Besondere Hinweise, Umweltauswirkungen, Alternativen zur Entsorgung</p>
+</div>
+
+
+<div class="collection-points">
+  <div class="collection-points-title"><i class="fas fa-map-marker-alt"></i> Sammelstellen</div>
+  <p>Wo Sie diesen Artikel in {country} entsorgen können</p>
+</div>
+
+Verwenden Sie eine einfache, klare Sprache. Heben Sie wichtige Informationen hervor. Fügen Sie Emojis ein, wo es angebracht ist.`
+      },
+      fr: {
+        code: 'fr', 
+        name: 'Français',
+        title: 'AstridEco ♻️ Assistant mondial de tri des déchets',
+        subtitle: 'Assistant intelligent dans 25 pays',
+        lang: 'Langue de l\'interface:', 
+        country: 'Sélectionnez un pays:',
+        input: 'Que voulez-vous jeter ?',
+        placeholder: 'Par exemple : bouteille en plastique de yaourt avec des restes de nourriture...',
+        button: 'Analyser les déchets', 
+        loading: 'Analyse des déchets...', 
+        error: '⚠️ Erreur. Veuillez vérifier votre saisie et réessayer.',
+        responseTitle: 'Guide d\'élimination des déchets',
+        footer: '♻️ AstridEco vous aide à éliminer les déchets de manière responsable dans le monde entier',
+        prompt: `Vous êtes AstridEco, un assistant mondial de tri des déchets. Fournissez des instructions détaillées pour l'élimination de l'article dans le pays spécifié.
+
+Pays: {country}
+Article à éliminer: {item}
+
+Votre réponse DOIT inclure ces sections avec des icônes et formatées comme des div HTML avec des classes appropriées:
+
+
+<div class="waste-type">
+  <div class="waste-type-title"><i class="fas fa-trash-alt"></i> Type de déchet</div>
+  <p>Identifiez le type de déchet (recyclable, organique, dangereux, etc.)</p>
+</div>
+
+
+<div class="disposal-steps">
+  <div class="disposal-steps-title"><i class="fas fa-list-ol"></i> Étapes d\'élimination</div>
+  <ul>
+    <li>Instructions étape par étape pour une élimination correcte</li>
+    <li>Incluez toute préparation nécessaire (nettoyage, séparation des parties)</li>
+  </ul>
+</div>
+
+
+<div class="additional-info">
+  <div class="additional-info-title"><i class="fas fa-info-circle"></i> Informations supplémentaires</div>
+  <p>Considérations spéciales, impact environnemental, alternatives à l\'élimination</p>
+</div>
+
+<div class="collection-points">
+  <div class="collection-points-title"><i class="fas fa-map-marker-alt"></i> Points de collecte</div>
+  <p>Où éliminer cet article en {country}</p>
+</div>
+
+Utilisez un langage simple et clair. Mettez en évidence les informations importantes. Incluez des emojis là où c'est approprié.`
+      },
+      pt: {
+        code: 'pt', 
+        name: 'Português',
+        title: 'AstridEco ♻️ Assistente Global de Separação de Resíduos',
+        subtitle: 'Assistente inteligente em 25 países',
+        lang: 'Idioma da UI:', 
+        country: 'Selecione um país:',
+        input: 'O que você deseja descartar?',
+        placeholder: 'Por exemplo: garrafa plástica de iogurte com restos de comida...',
+        button: 'Analisar Resíduos', 
+        loading: 'Analisando resíduos...', 
+        error: '⚠️ Erro. Por favor verifique sua entrada e tente novamente.',
+        responseTitle: 'Guia de Descarte de Resíduos',
+        footer: '♻️ AstridEco ajuda você a descartar resíduos com responsabilidade em todo o mundo',
+        prompt: `Você é o AstridEco, um assistente global de separação de resíduos. Forneça instruções detalhadas para descartar o item no país especificado.
+
+País: {country}
+Item para descarte: {item}
+
+Sua resposta DEVE incluir estas seções com ícones e formatadas como divs HTML com classes apropriadas:
+
+
+<div class="waste-type">
+  <div class="waste-type-title"><i class="fas fa-trash-alt"></i> Tipo de Resíduo</div>
+  <p>Identifique o tipo de resíduo (reciclável, orgânico, perigoso, etc.)</p>
+</div>
+
+
+<div class="disposal-steps">
+  <div class="disposal-steps-title"><i class="fas fa-list-ol"></i> Passos de Descarte</div>
+  <ul>
+    <li>Instruções passo a passo para descarte correto</li>
+    <li>Inclua qualquer preparação necessária (limpeza, separação de partes)</li>
+  </ul>
+</div>
+
+
+<div class="additional-info">
+  <div class="additional-info-title"><i class="fas fa-info-circle"></i> Informações Adicionais</div>
+  <p>Considerações especiais, impacto ambiental, alternativas ao descarte</p>
+</div>
+
+<div class="collection-points">
+  <div class="collection-points-title"><i class="fas fa-map-marker-alt"></i> Pontos de Coleta</div>
+  <p>Onde descartar este item em {country}</p>
+</div>
+
+Use linguagem simples e clara. Destaque informações importantes. Inclua emojis onde for apropriado.`
+      }
+    };
+    const langSel = document.getElementById('lang');
+    for (let key in T) {
+      let o = document.createElement('option');
+      o.value = key; 
+      o.textContent = T[key].name + ' (' + T[key].code + ')';
+      if (key === 'en') o.selected = true;
+      langSel.appendChild(o);
+    }
+    function updateUIText() {
+      const t = T[langSel.value];
+      document.documentElement.lang = t.code;
+      document.getElementById('ui-title').textContent = t.title;
+      document.getElementById('ui-subtitle').textContent = t.subtitle;
+      document.getElementById('ui-lang-label').textContent = t.lang;
+      document.getElementById('ui-country-label').textContent = t.country;
+      document.getElementById('ui-input-label').textContent = t.input;
+      document.getElementById('userInput').placeholder = t.placeholder;
+      document.getElementById('ui-button').textContent = t.button;
+      document.getElementById('ui-loading').textContent = t.loading;
+      document.getElementById('response-title').textContent = t.responseTitle;
+      document.getElementById('ui-footer').textContent = t.footer;
+    }
+    
+    langSel.addEventListener('change', updateUIText);
+    updateUIText(); // initial update
+    document.getElementById('askBtn').onclick = async () => {
+      const t = T[langSel.value];
+      const country = document.getElementById('country').value;
+      const item = document.getElementById('userInput').value.trim();
+      
+      if (!item) {
+        alert(t.input);
+        return;
+      }
+      document.getElementById('loader').style.display = 'block';
+      const respDiv = document.getElementById('response');
+      respDiv.classList.remove('visible');
+      document.getElementById('answer').innerHTML = '';
+      document.getElementById('askBtn').disabled = true;
+
+      try {
+        const prompt = t.prompt
+          .replace('{country}', country)
+          .replace('{item}', item);
+        const res = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model, 
+            messages: [{role: 'user', content: prompt}],
+            temperature: 0.5, 
+            max_tokens: 1000
+          })
+        });
+
+        const js = await res.json();
+        const raw = js.choices?.[0]?.message?.content || t.error;
+        document.getElementById('answer').innerHTML = raw;
+        
+      } catch (err) {
+        console.error('API Error:', err);
+        document.getElementById('answer').innerHTML = `
+          <div class="error-message">
+            <i class="fas fa-exclamation-triangle"></i> ${t.error}
+          </div>
+        `;
+      } finally {
+        document.getElementById('loader').style.display = 'none';
+        respDiv.classList.add('visible');
+        document.getElementById('askBtn').disabled = false;
+        respDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    };
+    document.getElementById('userInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('askBtn').click();
+      }
+    });
+  </script>
+</body> 
+</html>
